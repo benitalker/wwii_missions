@@ -1,0 +1,148 @@
+from sqlalchemy import text
+
+from config.base import session_factory
+
+create_query = """
+CREATE TABLE mission (
+    mission_id INTEGER PRIMARY KEY,                 -- Mission ID, auto-incremented primary key
+    mission_date DATE,                             -- Mission Date, a date field
+    theater_of_operations VARCHAR(100),            -- Theater of Operations, assuming text data
+    country VARCHAR(100),                          -- Country, assuming text data
+    air_force VARCHAR(100),                        -- Air Force, assuming text data
+    unit_id VARCHAR(100),                          -- Unit ID, assuming text data
+    aircraft_series VARCHAR(100),                  -- Aircraft Series, assuming text data
+    callsign VARCHAR(100),                         -- Callsign, assuming text data
+    mission_type VARCHAR(100),                     -- Mission Type, assuming text data
+    takeoff_base VARCHAR(255),                     -- Takeoff Base, assuming larger text data
+    takeoff_location VARCHAR(255),                 -- Takeoff Location, assuming larger text data
+    takeoff_latitude VARCHAR(15),               -- Takeoff Latitude, assuming GPS latitude
+    takeoff_longitude NUMERIC(10, 6),              -- Takeoff Longitude, assuming GPS longitude
+    target_id VARCHAR(100),                        -- Target ID, assuming text or unique identifier
+    target_country VARCHAR(100),                   -- Target Country, assuming text data
+    target_city VARCHAR(100),                      -- Target City, assuming text data
+    target_type VARCHAR(100),                      -- Target Type, assuming text data
+    target_industry VARCHAR(255),                  -- Target Industry, assuming text data
+    target_priority VARCHAR(5),                       -- Target Priority, assuming numerical data
+    target_latitude NUMERIC(10, 6),                -- Target Latitude, assuming GPS latitude
+    target_longitude NUMERIC(10, 6),               -- Target Longitude, assuming GPS longitude
+    altitude_hundreds_of_feet NUMERIC(7, 2),             -- Altitude in hundreds of feet, assuming numerical data
+    airborne_aircraft NUMERIC(4, 1),                     -- Airborne Aircraft, assuming numerical data
+    attacking_aircraft INTEGER,                    -- Attacking Aircraft, assuming numerical data
+    bombing_aircraft INTEGER,                      -- Bombing Aircraft, assuming numerical data
+    aircraft_returned INTEGER,                     -- Aircraft Returned, assuming numerical data
+    aircraft_failed INTEGER,                       -- Aircraft Failed, assuming numerical data
+    aircraft_damaged INTEGER,                      -- Aircraft Damaged, assuming numerical data
+    aircraft_lost INTEGER,                         -- Aircraft Lost, assuming numerical data
+    high_explosives VARCHAR(255),                  -- High Explosives, assuming text
+    high_explosives_type VARCHAR(255),             -- High Explosives Type, assuming text data
+    high_explosives_weight_pounds VARCHAR(25),  -- High Explosives Weight in Pounds, assuming decimal data
+    high_explosives_weight_tons NUMERIC(10, 2),    -- High Explosives Weight in Tons, assuming decimal data
+    incendiary_devices VARCHAR(255),               -- Incendiary Devices, assuming text data
+    incendiary_devices_type VARCHAR(255),          -- Incendiary Devices Type, assuming text data
+    incendiary_devices_weight_pounds NUMERIC(10, 2), -- Incendiary Devices Weight in Pounds, assuming decimal data
+    incendiary_devices_weight_tons NUMERIC(10, 2),   -- Incendiary Devices Weight in Tons, assuming decimal data
+    fragmentation_devices VARCHAR(255),            -- Fragmentation Devices, assuming text data
+    fragmentation_devices_type VARCHAR(255),       -- Fragmentation Devices Type, assuming text data
+    fragmentation_devices_weight_pounds NUMERIC(10, 2), -- Fragmentation Devices Weight in Pounds, assuming decimal data
+    fragmentation_devices_weight_tons NUMERIC(10, 2),   -- Fragmentation Devices Weight in Tons, assuming decimal data
+    total_weight_pounds NUMERIC(10, 2),            -- Total Weight in Pounds, assuming decimal data
+    total_weight_tons NUMERIC(10, 2),              -- Total Weight in Tons, assuming decimal data
+    time_over_target VARCHAR(8),                         -- Time Over Target, assuming time data
+    bomb_damage_assessment VARCHAR(255),           -- Bomb Damage Assessment, assuming text data
+    source_id VARCHAR(100)                         -- Source ID, assuming text or unique identifier
+);
+
+create table if not exists Countries (
+    country_id serial primary key,
+    country_name varchar(100) unique not null
+);
+
+create table if not exists Cities (
+    city_id serial primary key,
+    city_name varchar(100) unique not null,
+    country_id int not null,
+    latitude decimal,
+    longitude decimal,
+    foreign key (country_id) references Countries(country_id)
+);
+
+create table if not exists TargetTypes (
+    target_type_id serial primary key,
+    target_type_name varchar(255) unique not null
+);
+
+create table if not exists Targets (
+    target_id serial primary key,
+    target_industry varchar(255) not null,
+    city_id int not null,
+    target_type_id int,
+    target_priority int,
+    foreign key (city_id) references Cities(city_id),
+    foreign key (target_type_id) references TargetTypes(target_type_id)
+);
+"""
+
+init_query = """
+-- Insert into Countries
+INSERT INTO countries (country_id, country_name)
+SELECT nextval('country_id_seq'), target_country
+FROM (
+    SELECT DISTINCT target_country
+    FROM mission
+    WHERE target_country IS NOT NULL
+) AS distinct_countries
+ON CONFLICT (country_name) DO NOTHING;
+
+-- Insert into Cities
+INSERT INTO cities (city_id, city_name, country_id, latitude, longitude)
+SELECT
+    nextval('city_id_seq'),
+    distinct_cities.target_city,
+    c.country_id,
+    distinct_cities.target_latitude::DECIMAL,
+    distinct_cities.target_longitude::DECIMAL
+FROM (
+    SELECT DISTINCT target_city, target_country, target_latitude, target_longitude
+    FROM mission
+    WHERE target_city IS NOT NULL
+) AS distinct_cities
+JOIN countries c ON distinct_cities.target_country = c.country_name
+ON CONFLICT (city_name) DO NOTHING;
+
+-- Insert into TargetTypes
+INSERT INTO targettypes (target_type_id, target_type_name)
+SELECT nextval('target_type_id_seq'), target_type
+FROM (
+    SELECT DISTINCT target_type
+    FROM mission
+    WHERE target_type IS NOT NULL
+) AS distinct_target_types
+ON CONFLICT (target_type_name) DO NOTHING;
+
+-- Insert into Targets
+INSERT INTO targets (target_id, target_industry, target_priority, city_id, target_type_id)
+SELECT
+    nextval('target_id_seq'),
+    m.target_industry,
+    m.target_priority::INTEGER,
+    ci.city_id,
+    tt.target_type_id
+FROM (
+    SELECT DISTINCT target_industry, target_priority, target_city, target_type
+    FROM mission
+    WHERE target_industry IS NOT NULL
+) AS m
+INNER JOIN cities ci ON m.target_city = ci.city_name
+INNER JOIN targettypes tt ON m.target_type = tt.target_type_name
+ON CONFLICT DO NOTHING;
+"""
+
+def create_tables():
+    with session_factory() as session:
+        res = session.execute(text(create_query))
+        return res.fetchone()
+
+def init_tables():
+    with session_factory() as session:
+        res = session.execute(text(init_query))
+        return res.fetchone()
