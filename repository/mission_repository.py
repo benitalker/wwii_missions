@@ -3,7 +3,6 @@ from returns.maybe import Maybe
 from config.base import session_factory
 from model import Mission
 
-
 def get_all_missions(limit: Optional[int] = None) -> List[Mission]:
     with session_factory() as session:  # Use your session context manager
         query = session.query(Mission)
