@@ -146,3 +146,7 @@ def init_tables():
     with session_factory() as session:
         res = session.execute(text(init_query))
         return res.fetchone()
+
+if __name__ == '__main__':
+    create_tables()
+    init_tables()

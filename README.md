@@ -14,6 +14,15 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the req
 pip install dictalchemy3 flask toolz returns psycopg2-binary sqlalchemy
 ```
 
+## Important
+dont forget to run the init tables
+
+```python
+if __name__ == '__main__':
+    create_tables()
+    init_tables()
+```
+
 ## Usage
 
 To run the application:
