@@ -1,18 +1,16 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Numeric
+from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, DECIMAL, Sequence
 from sqlalchemy.orm import relationship
 from config.base import Base
 
 class City(Base):
     __tablename__ = "Cities"
-
-    city_id = Column(Integer, primary_key=True, autoincrement=True)
+    city_id = Column(Integer, Sequence('city_id_seq'), primary_key=True)
     city_name = Column(String(100), unique=True, nullable=False)
     country_id = Column(Integer, ForeignKey('Countries.country_id'), nullable=False)
-    latitude = Column(Numeric)
-    longitude = Column(Numeric)
+    latitude = Column(DECIMAL, nullable=True)
+    longitude = Column(DECIMAL, nullable=True)
 
-    country = relationship("Country", back_populates="cities")
-    targets = relationship("Target", back_populates="city")
+    country = relationship("Country")
 
     def __repr__(self):
         return (f"<City(city_id={self.city_id}, city_name='{self.city_name}', "

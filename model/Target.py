@@ -1,18 +1,17 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Sequence
 from sqlalchemy.orm import relationship
 from config.base import Base
 
 class Target(Base):
-    __tablename__ = "targets"
-
-    target_id = Column(Integer, primary_key=True, autoincrement=True)
+    __tablename__ = 'Targets'
+    target_id = Column(Integer, Sequence('target_id_seq'), primary_key=True)
     target_industry = Column(String(255), nullable=False)
-    target_priority = Column(Integer)
     city_id = Column(Integer, ForeignKey('Cities.city_id'), nullable=False)
-    target_type_id = Column(Integer, ForeignKey('TargetTypes.target_type_id'))
+    target_type_id = Column(Integer, ForeignKey('TargetTypes.target_type_id'), nullable=True)
+    target_priority = Column(Integer, nullable=True)
 
-    city = relationship("City", back_populates="targets")
-    target_type = relationship("TargetType", back_populates="targets")
+    city = relationship("City")
+    target_type = relationship("TargetType")
 
     def __repr__(self):
         return (f"<Target(target_id={self.target_id}, target_industry='{self.target_industry}', "

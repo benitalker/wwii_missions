@@ -1,49 +1,49 @@
-SELECT theater_of_operations, COUNT(*) AS active_missions
+SELECT air_force, COUNT(*) AS active_missions
 FROM mission
 WHERE EXTRACT(YEAR FROM mission_date) = :year
-GROUP BY theater_of_operations
+GROUP BY air_force
 ORDER BY active_missions DESC;
 
-SELECT theater_of_operations, COUNT(*) AS active_missions
+SELECT air_force, COUNT(*) AS active_missions
 FROM mission
 WHERE EXTRACT(YEAR FROM mission_date) = 1943
-GROUP BY theater_of_operations
+GROUP BY air_force
 ORDER BY active_missions DESC;
 
---"theater_of_operations"	"active_missions"
---"MTO"	                        9953
---"ETO"	                        7437
---"PTO"	                        3834
---"CBI"	                        1585
---[null]	                            376
---"EAST AFRICA"	                29
+--"air_force"	"active_missions"
+--"MTO"	        9953
+--"ETO"	        7437
+--"PTO"	        3834
+--"CBI"	        1585
+--[null]	    376
+--"EAST AFRICA"	29
 
 EXPLAIN
-SELECT theater_of_operations, COUNT(*) AS active_missions
+SELECT air_force, COUNT(*) AS active_missions
 FROM mission
 WHERE EXTRACT(YEAR FROM mission_date) = 1943
-GROUP BY theater_of_operations
+GROUP BY air_force
 ORDER BY active_missions DESC;
 
 "QUERY PLAN"
 "Sort  (cost=5986.54..5986.55 rows=6 width=12)"
 "  Sort Key: (count(*)) DESC"
 "  ->  Finalize GroupAggregate  (cost=5982.11..5986.46 rows=6 width=12)"
-"        Group Key: theater_of_operations"
+"        Group Key: air_force"
 "        ->  Gather Merge  (cost=5982.11..5986.34 rows=12 width=12)"
 "              Workers Planned: 2"
 "              ->  Partial GroupAggregate  (cost=4982.09..4984.93 rows=6 width=12)"
-"                    Group Key: theater_of_operations"
+"                    Group Key: air_force"
 "                    ->  Sort  (cost=4982.09..4983.02 rows=371 width=4)"
-"                          Sort Key: theater_of_operations"
+"                          Sort Key: air_force"
 "                          ->  Parallel Seq Scan on mission  (cost=0.00..4966.26 rows=371 width=4)"
 "                                Filter: (EXTRACT(year FROM mission_date) = '1943'::numeric)"
 
 EXPLAIN ANALYZE
-SELECT theater_of_operations, COUNT(*) AS active_missions
+SELECT air_force, COUNT(*) AS active_missions
 FROM mission
 WHERE EXTRACT(YEAR FROM mission_date) = 1943
-GROUP BY theater_of_operations
+GROUP BY air_force
 ORDER BY active_missions DESC;
 
 "QUERY PLAN"
@@ -51,14 +51,14 @@ ORDER BY active_missions DESC;
 "  Sort Key: (count(*)) DESC"
 "  Sort Method: quicksort  Memory: 25kB"
 "  ->  Finalize GroupAggregate  (cost=5982.11..5986.46 rows=6 width=12) (actual time=25.055..27.527 rows=6 loops=1)"
-"        Group Key: theater_of_operations"
+"        Group Key: air_force"
 "        ->  Gather Merge  (cost=5982.11..5986.34 rows=12 width=12) (actual time=25.043..27.517 rows=6 loops=1)"
 "              Workers Planned: 2"
 "              Workers Launched: 2"
 "              ->  Partial GroupAggregate  (cost=4982.09..4984.93 rows=6 width=12) (actual time=7.480..8.189 rows=2 loops=3)"
-"                    Group Key: theater_of_operations"
+"                    Group Key: air_force"
 "                    ->  Sort  (cost=4982.09..4983.02 rows=371 width=4) (actual time=7.441..7.682 rows=7738 loops=3)"
-"                          Sort Key: theater_of_operations"
+"                          Sort Key: air_force"
 "                          Sort Method: quicksort  Memory: 769kB"
 "                          Worker 0:  Sort Method: quicksort  Memory: 25kB"
 "                          Worker 1:  Sort Method: quicksort  Memory: 25kB"
@@ -85,7 +85,7 @@ CREATE INDEX idx_mission_date_year ON mission (EXTRACT(YEAR FROM mission_date));
 "  Sort Key: (count(*)) DESC"
 "  Sort Method: quicksort  Memory: 25kB"
 "  ->  HashAggregate  (cost=2141.46..2141.52 rows=6 width=12) (actual time=4.815..4.817 rows=6 loops=1)"
-"        Group Key: theater_of_operations"
+"        Group Key: air_force"
 "        Batches: 1  Memory Usage: 24kB"
 "        ->  Bitmap Heap Scan on mission  (cost=19.33..2137.00 rows=891 width=4) (actual time=1.109..2.621 rows=23214 loops=1)"
 "              Recheck Cond: (EXTRACT(year FROM mission_date) = '1943'::numeric)"
