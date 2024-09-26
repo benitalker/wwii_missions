@@ -1,14 +1,29 @@
-SELECT country, AVG(attacking_aircraft) AS average_damage
+SELECT country, bomb_damage_assessment ,AVG(attacking_aircraft) AS average_damage
 FROM mission
 WHERE bombing_aircraft > 5
-GROUP BY country;
+GROUP BY country, bomb_damage_assessment;
 
-"country"	    "average_damage"
-"AUSTRALIA"	    7.3888888888888889
-"GREAT BRITAIN"	26.5680426624530911
-"SOUTH AFRICA"	6.3333333333333333
-"USA"	        18.3900767411554612
-[null]	        16.5182405910875087
+
+"country"	    "bomb_damage_assessment"	                                                                            "average_damage"
+"AUSTRALIA"		                                                                                                        7.3888888888888889
+"GREAT BRITAIN"		                                                                                                    26.5680426624530911
+"SOUTH AFRICA"		                                                                                                    6.3333333333333333
+"USA"	        "1 DIRECT HIT ON BATTLESHIP, 2 NEAR MISSES. TRANSPORT SUNK."	                                        6.0000000000000000
+"USA"	        "1 TRANSPORT SEEN TO CAPSIZE FROM BOMBING"	                                                            9.0000000000000000
+"USA"	        "3 LARGE FIRES"	                                                                                        6.0000000000000000
+"USA"	        "4 BOMBS MISSED ENEMY CRUISER, 3 BOMBS STRUCK TRANSPORT NEAR SHORE - DIRECT HITS, TRANSPORT BURNING"	8.0000000000000000
+"USA"	        "4 SHIPS IN GULF TARGETED.  RESULTS UNCERTAINDUE TO CLOUDS"	                                            9.0000000000000000
+"USA"	        "ATTACKED TRANSPORTS AND DESTROYER, RESULTS UNKNOWN"	                                                6.0000000000000000
+"USA"	        "BDA NOT PERFORMED DUE TO ENEMY INTERCEPTORS"	                                                        6.0000000000000000
+"USA"	        "BDA NOT PERFORMED DUE TO ENEMY SEARCHLIGHTS AND AA FIRE"	                                            6.0000000000000000
+"USA"	        "DOCKS WERE HIT.  LARGE FIRE BURNING BEFORE AND AFTER ATTACK."	                                        7.0000000000000000
+"USA"	        "EXCELLENT"	                                                                                            8.0000000000000000
+"USA"	        "GOOD"	                                                                                                8.0000000000000000
+"USA"	        "HITS ON RUNWAY AND PARKING AREA."	                                                                    9.0000000000000000
+"USA"	        "NO HITS"	                                                                                            6.0000000000000000
+"USA"	        "NOT STATED, LANDED AT MINDANEO"	                                                                    9.0000000000000000
+"USA"		                                                                                                            18.4035664234282124
+		                                                                                                                16.5182405910875087
 
 EXPLAIN
 SELECT country, AVG(attacking_aircraft) AS average_damage

@@ -76,38 +76,55 @@ create table if not exists Targets (
     foreign key (target_type_id) references TargetTypes(target_type_id)
 );
 
+-- Insert into Countries
+INSERT INTO countries (country_id, country_name)
+SELECT nextval('country_id_seq'), target_country
+FROM (
+    SELECT DISTINCT target_country
+    FROM mission
+    WHERE target_country IS NOT NULL
+) AS distinct_countries
+ON CONFLICT (country_name) DO NOTHING;
 
-insert into Countries (country_name)
-select distinct target_country
-FROM mission
-where target_country is not NULL
-on conflict (country_name) do nothing;
-
-insert into Cities (city_name, country_id, latitude, longitude)
-select distinct
-    m.target_city,
+-- Insert into Cities
+INSERT INTO cities (city_id, city_name, country_id, latitude, longitude)
+SELECT
+    nextval('city_id_seq'),
+    distinct_cities.target_city,
     c.country_id,
-    m.target_latitude::decimal,
-    m.target_longitude::decimal
-from mission m
-join Countries c on m.country = c.country_name
-where m.target_city is not null
-on conflict (city_name) do nothing;
+    distinct_cities.target_latitude::DECIMAL,
+    distinct_cities.target_longitude::DECIMAL
+FROM (
+    SELECT DISTINCT target_city, target_country, target_latitude, target_longitude
+    FROM mission
+    WHERE target_city IS NOT NULL
+) AS distinct_cities
+JOIN countries c ON distinct_cities.target_country = c.country_name
+ON CONFLICT (city_name) DO NOTHING;
 
-insert into TargetTypes (target_type_name)
-select distinct target_type
-from mission
-where target_type is not null
-on conflict (target_type_name) do nothing;
+-- Insert into TargetTypes
+INSERT INTO targettypes (target_type_id, target_type_name)
+SELECT nextval('target_type_id_seq'), target_type
+FROM (
+    SELECT DISTINCT target_type
+    FROM mission
+    WHERE target_type IS NOT NULL
+) AS distinct_target_types
+ON CONFLICT (target_type_name) DO NOTHING;
 
-insert into Targets (target_industry, target_priority, city_id, target_type_id)
-select distinct
+-- Insert into Targets
+INSERT INTO targets (target_id, target_industry, target_priority, city_id, target_type_id)
+SELECT
+    nextval('target_id_seq'),
     m.target_industry,
-	m.target_priority::integer,
+    m.target_priority::INTEGER,
     ci.city_id,
     tt.target_type_id
-from mission m
-inner join Cities ci on m.target_city = ci.city_name
-inner join TargetTypes tt on m.target_type = tt.target_type_name
-where m.target_id is not NULL and m.target_industry is not null
-on conflict (target_id) do nothing;
+FROM (
+    SELECT DISTINCT target_industry, target_priority, target_city, target_type
+    FROM mission
+    WHERE target_industry IS NOT NULL
+) AS m
+INNER JOIN cities ci ON m.target_city = ci.city_name
+INNER JOIN targettypes tt ON m.target_type = tt.target_type_name
+ON CONFLICT DO NOTHING;

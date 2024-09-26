@@ -1,9 +1,11 @@
 from config.base import engine, Base
 
 def create_tables():
-    Base.metadata.create_all(engine)
-    print("tables created")
+    tables_to_create = [table for name, table in Base.metadata.tables.items() if name != 'mission']
+    Base.metadata.create_all(engine, tables=tables_to_create)
+    print("tables created (excluding Mission)")
 
 def drop_tables():
-    Base.metadata.drop_all(engine)
-    print("tables dropped")
+    tables_to_drop = [table for name, table in Base.metadata.tables.items() if name != 'mission']
+    Base.metadata.drop_all(engine, tables=tables_to_drop)
+    print("tables dropped (excluding Mission)")

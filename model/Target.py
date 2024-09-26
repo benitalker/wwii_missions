@@ -3,11 +3,11 @@ from sqlalchemy.orm import relationship
 from config.base import Base
 
 class Target(Base):
-    __tablename__ = 'Targets'
+    __tablename__ = 'targets'
     target_id = Column(Integer, Sequence('target_id_seq'), primary_key=True)
     target_industry = Column(String(255), nullable=False)
-    city_id = Column(Integer, ForeignKey('Cities.city_id'), nullable=False)
-    target_type_id = Column(Integer, ForeignKey('TargetTypes.target_type_id'), nullable=True)
+    city_id = Column(Integer, ForeignKey('cities.city_id'), nullable=False)
+    target_type_id = Column(Integer, ForeignKey('targettypes.target_type_id'), nullable=True)
     target_priority = Column(Integer, nullable=True)
 
     city = relationship("City")

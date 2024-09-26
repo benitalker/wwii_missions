@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from config.base import Base
 
 class TargetType(Base):
-    __tablename__ = 'TargetTypes'
+    __tablename__ = 'targettypes'
     target_type_id = Column(Integer, Sequence('target_type_id_seq'), primary_key=True)
     target_type_name = Column(String(255), unique=True, nullable=False)
 
