@@ -4,13 +4,6 @@ WHERE EXTRACT(YEAR FROM mission_date) = :year
 GROUP BY air_force
 ORDER BY active_missions DESC;
 
-
-
-
-
-
-
-
 SELECT air_force, COUNT(*) AS active_missions
 FROM mission
 WHERE EXTRACT(YEAR FROM mission_date) = 1943
@@ -75,17 +68,19 @@ ORDER BY active_missions DESC;
 "Planning Time: 0.098 ms"
 "Execution Time: 27.635 ms"
 
---תוצאות לפני יצירת אינדקס
---עלות כוללת: 5986.54
---שורות שנשמרו לאחר סינון: 6
---זמן ביצוע כולל: 27.635 ms
---תכנית הביצוע:
---שימוש במיון: Sort Method: quicksort
---סוג הסריקה: Parallel Seq Scan
---סריקת 77,738 שורות לאחר סינון
---שימוש בעיבוד מקבילי (2 עובדים)
-
-CREATE INDEX idx_mission_date_year ON mission (EXTRACT(YEAR FROM mission_date));
+--Before Index:
+--
+--Total cost: 5986.54
+--Rows after filtering: 6
+--Total execution time: 27.635 ms
+--Execution plan:
+--
+--Used Sort Method: quicksort
+--Scan type: Parallel Seq Scan
+--Scanned 23,214 rows after filtering (7,738 rows * 3 loops)
+--Used parallel processing (2 workers)
+--Rows Removed by Filter: 155,067 (51,689 * 3 loops)
+--CREATE INDEX idx_mission_date_year ON mission (EXTRACT(YEAR FROM mission_date));
 
 "QUERY PLAN"
 "Sort  (cost=2141.60..2141.61 rows=6 width=12) (actual time=4.825..4.826 rows=6 loops=1)"
@@ -101,20 +96,26 @@ CREATE INDEX idx_mission_date_year ON mission (EXTRACT(YEAR FROM mission_date));
 "                    Index Cond: (EXTRACT(year FROM mission_date) = '1943'::numeric)"
 "Planning Time: 1.402 ms"
 "Execution Time: 4.869 ms"
-
---תוצאות לאחר יצירת האינדקס
---עלות כוללת: 2141.60
---שורות שנשמרו לאחר סינון: 6
---זמן ביצוע כולל: 4.869 ms
---תכנית הביצוע:
---שימוש במיון: Sort Method: quicksort
---שימוש ב-HashAggregate במקום GroupAggregate
---סוג הסריקה: Bitmap Heap Scan עם תמיכה ב-Bitmap Index Scan
---סריקת 23,214 שורות בלבד בזכות האינדקס
-
---השוואה בין לפני ואחרי
---זמן ביצוע כולל: ירידה מ-27.635 ms ל-4.869 ms (שיפור של כ-82%)
---הפחתת עלות: ירידה משמעותית בעלות מ-5986.54 ל-2141.60
---שיפור בסוג הסריקה: מעבר מ-Parallel Seq Scan ל-Bitmap Index Scan, שמוביל להפחתה בכמות השורות הנסרקות ובזמן עיבוד כולל
+--
+--After Index:
+--
+--Total cost: 2141.60
+--Rows after filtering: 6
+--Total execution time: 4.869 ms
+--Execution plan:
+--
+--Used Sort Method: quicksort
+--Used HashAggregate instead of GroupAggregate
+--Scan type: Bitmap Heap Scan with Bitmap Index Scan
+--Scanned 23,214 rows using the index
+--No parallel processing used
+--
+--Comparison:
+--
+--Execution time: Reduced from 27.635 ms to 4.869 ms (improvement of about 82%)
+--Significant cost reduction: From 5986.54 to 2141.60 (reduction of about 64%)
+--Improved scan type: From Parallel Seq Scan to Bitmap Index Scan, leading to more efficient row selection
+--Elimination of parallel processing, as the index made it unnecessary
+--Reduction in the number of rows scanned: From 178,281 (including filtered out rows) to 23,214
 
 DROP INDEX IF EXISTS idx_mission_date_year;

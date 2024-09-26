@@ -1,91 +1,111 @@
-SELECT country, bomb_damage_assessment ,AVG(attacking_aircraft) AS average_damage
-FROM mission
-WHERE bombing_aircraft > 5
-GROUP BY country, bomb_damage_assessment;
+select target_country, bomb_damage_assessment, count(target_country) from mission
+where bomb_damage_assessment is not null
+and airborne_aircraft > 5
+group by target_country, bomb_damage_assessment
+order by count(bomb_damage_assessment) desc limit 1;
 
-
-"country"	    "bomb_damage_assessment"	                                                                            "average_damage"
-"AUSTRALIA"		                                                                                                        7.3888888888888889
-"GREAT BRITAIN"		                                                                                                    26.5680426624530911
-"SOUTH AFRICA"		                                                                                                    6.3333333333333333
-"USA"	        "1 DIRECT HIT ON BATTLESHIP, 2 NEAR MISSES. TRANSPORT SUNK."	                                        6.0000000000000000
-"USA"	        "1 TRANSPORT SEEN TO CAPSIZE FROM BOMBING"	                                                            9.0000000000000000
-"USA"	        "3 LARGE FIRES"	                                                                                        6.0000000000000000
-"USA"	        "4 BOMBS MISSED ENEMY CRUISER, 3 BOMBS STRUCK TRANSPORT NEAR SHORE - DIRECT HITS, TRANSPORT BURNING"	8.0000000000000000
-"USA"	        "4 SHIPS IN GULF TARGETED.  RESULTS UNCERTAINDUE TO CLOUDS"	                                            9.0000000000000000
-"USA"	        "ATTACKED TRANSPORTS AND DESTROYER, RESULTS UNKNOWN"	                                                6.0000000000000000
-"USA"	        "BDA NOT PERFORMED DUE TO ENEMY INTERCEPTORS"	                                                        6.0000000000000000
-"USA"	        "BDA NOT PERFORMED DUE TO ENEMY SEARCHLIGHTS AND AA FIRE"	                                            6.0000000000000000
-"USA"	        "DOCKS WERE HIT.  LARGE FIRE BURNING BEFORE AND AFTER ATTACK."	                                        7.0000000000000000
-"USA"	        "EXCELLENT"	                                                                                            8.0000000000000000
-"USA"	        "GOOD"	                                                                                                8.0000000000000000
-"USA"	        "HITS ON RUNWAY AND PARKING AREA."	                                                                    9.0000000000000000
-"USA"	        "NO HITS"	                                                                                            6.0000000000000000
-"USA"	        "NOT STATED, LANDED AT MINDANEO"	                                                                    9.0000000000000000
-"USA"		                                                                                                            18.4035664234282124
-		                                                                                                                16.5182405910875087
+"target_country"	"bomb_damage_assessment"	"count"
+"BURMA"	            "EXCELLENT"	                7
 
 EXPLAIN
-SELECT country, AVG(attacking_aircraft) AS average_damage
-FROM mission
-WHERE bombing_aircraft > 5
-GROUP BY country;
+select target_country, bomb_damage_assessment, count(target_country) from mission
+where bomb_damage_assessment is not null
+and airborne_aircraft > 5
+group by target_country, bomb_damage_assessment
+order by count(bomb_damage_assessment) desc limit 1;
 
 "QUERY PLAN"
-"Finalize GroupAggregate  (cost=5888.46..5889.74 rows=5 width=38)"
-"  Group Key: country"
-"  ->  Gather Merge  (cost=5888.46..5889.63 rows=10 width=38)"
-"        Workers Planned: 2"
-"        ->  Sort  (cost=4888.43..4888.45 rows=5 width=38)"
-"              Sort Key: country"
-"              ->  Partial HashAggregate  (cost=4888.33..4888.38 rows=5 width=38)"
-"                    Group Key: country"
-"                    ->  Parallel Seq Scan on mission  (cost=0.00..4780.55 rows=21556 width=10)"
-"                          Filter: (bombing_aircraft > 5)"
+"Limit  (cost=5785.52..5785.52 rows=1 width=48)"
+"  ->  Sort  (cost=5785.52..5785.61 rows=37 width=48)"
+"        Sort Key: (count(bomb_damage_assessment)) DESC"
+"        ->  Finalize GroupAggregate  (cost=5780.86..5785.33 rows=37 width=48)"
+"              Group Key: target_country, bomb_damage_assessment"
+"              ->  Gather Merge  (cost=5780.86..5784.66 rows=30 width=48)"
+"                    Workers Planned: 2"
+"                    ->  Partial GroupAggregate  (cost=4780.84..4781.18 rows=15 width=48)"
+"                          Group Key: target_country, bomb_damage_assessment"
+"                          ->  Sort  (cost=4780.84..4780.88 rows=15 width=32)"
+"                                Sort Key: target_country, bomb_damage_assessment"
+"                                ->  Parallel Seq Scan on mission  (cost=0.00..4780.55 rows=15 width=32)"
+"                                      Filter: ((bomb_damage_assessment IS NOT NULL) AND (airborne_aircraft > '5'::numeric))"
 
 EXPLAIN ANALYZE
-SELECT country, AVG(attacking_aircraft) AS average_damage
-FROM mission
-WHERE bombing_aircraft > 5
-GROUP BY country;
+select target_country, bomb_damage_assessment, count(target_country) from mission
+where bomb_damage_assessment is not null
+and airborne_aircraft > 5
+group by target_country, bomb_damage_assessment
+order by count(bomb_damage_assessment) desc limit 1;
 
 "QUERY PLAN"
-"Finalize GroupAggregate  (cost=5888.46..5889.74 rows=5 width=38) (actual time=26.267..29.661 rows=5 loops=1)"
-"  Group Key: country"
-"  ->  Gather Merge  (cost=5888.46..5889.63 rows=10 width=38) (actual time=26.261..29.652 rows=11 loops=1)"
-"        Workers Planned: 2"
-"        Workers Launched: 2"
-"        ->  Sort  (cost=4888.43..4888.45 rows=5 width=38) (actual time=9.946..9.947 rows=4 loops=3)"
-"              Sort Key: country"
-"              Sort Method: quicksort  Memory: 25kB"
-"              Worker 0:  Sort Method: quicksort  Memory: 25kB"
-"              Worker 1:  Sort Method: quicksort  Memory: 25kB"
-"              ->  Partial HashAggregate  (cost=4888.33..4888.38 rows=5 width=38) (actual time=9.919..9.920 rows=4 loops=3)"
-"                    Group Key: country"
-"                    Batches: 1  Memory Usage: 24kB"
-"                    Worker 0:  Batches: 1  Memory Usage: 24kB"
-"                    Worker 1:  Batches: 1  Memory Usage: 24kB"
-"                    ->  Parallel Seq Scan on mission  (cost=0.00..4780.55 rows=21556 width=10) (actual time=0.013..7.872 rows=17450 loops=3)"
-"                          Filter: (bombing_aircraft > 5)"
-"                          Rows Removed by Filter: 41977"
-"Planning Time: 0.088 ms"
-"Execution Time: 29.692 ms"
+"Limit  (cost=5785.52..5785.52 rows=1 width=48) (actual time=36.799..39.553 rows=1 loops=1)"
+"  ->  Sort  (cost=5785.52..5785.61 rows=37 width=48) (actual time=36.797..39.551 rows=1 loops=1)"
+"        Sort Key: (count(bomb_damage_assessment)) DESC"
+"        Sort Method: top-N heapsort  Memory: 25kB"
+"        ->  Finalize GroupAggregate  (cost=5780.86..5785.33 rows=37 width=48) (actual time=36.751..39.526 rows=21 loops=1)"
+"              Group Key: target_country, bomb_damage_assessment"
+"              ->  Gather Merge  (cost=5780.86..5784.66 rows=30 width=48) (actual time=36.737..39.508 rows=21 loops=1)"
+"                    Workers Planned: 2"
+"                    Workers Launched: 2"
+"                    ->  Partial GroupAggregate  (cost=4780.84..4781.18 rows=15 width=48) (actual time=10.679..10.685 rows=7 loops=3)"
+"                          Group Key: target_country, bomb_damage_assessment"
+"                          ->  Sort  (cost=4780.84..4780.88 rows=15 width=32) (actual time=10.671..10.672 rows=11 loops=3)"
+"                                Sort Key: target_country, bomb_damage_assessment"
+"                                Sort Method: quicksort  Memory: 26kB"
+"                                Worker 0:  Sort Method: quicksort  Memory: 25kB"
+"                                Worker 1:  Sort Method: quicksort  Memory: 25kB"
+"                                ->  Parallel Seq Scan on mission  (cost=0.00..4780.55 rows=15 width=32) (actual time=7.082..10.599 rows=11 loops=3)"
+"                                      Filter: ((bomb_damage_assessment IS NOT NULL) AND (airborne_aircraft > '5'::numeric))"
+"                                      Rows Removed by Filter: 59416"
+"Planning Time: 1.046 ms"
+"Execution Time: 39.660 ms"
+--
+--Before Index:
+--
+--Total cost: 5785.52
+--Rows after filtering: 21
+--Total execution time: 39.660 ms
+--Execution plan:
+--
+--Used Sort Method: top-N heapsort and quicksort
+--Scan type: Parallel Seq Scan
+--Scanned 33 rows after filtering (11 rows * 3 loops)
+--Used parallel processing (2 workers)
 
-CREATE INDEX idx_bombing_aircraft_country ON mission (bombing_aircraft, country);
+CREATE INDEX idx_mission_performance ON mission (airborne_aircraft, bomb_damage_assessment, target_country);
 
 "QUERY PLAN"
-"HashAggregate  (cost=5342.60..5342.67 rows=5 width=38) (actual time=13.916..13.919 rows=5 loops=1)"
-"  Group Key: country"
-"  Batches: 1  Memory Usage: 24kB"
-"  ->  Bitmap Heap Scan on mission  (cost=585.24..5083.93 rows=51735 width=10) (actual time=1.535..5.834 rows=52351 loops=1)"
-"        Recheck Cond: (bombing_aircraft > 5)"
-"        Heap Blocks: exact=3275"
-"        ->  Bitmap Index Scan on idx_bombing_aircraft_country  (cost=0.00..572.31 rows=51735 width=0) (actual time=1.284..1.284 rows=52351 loops=1)"
-"              Index Cond: (bombing_aircraft > 5)"
-"Planning Time: 1.246 ms"
-"Execution Time: 13.995 ms"
+"Limit  (cost=1556.18..1556.18 rows=1 width=48) (actual time=2.482..2.483 rows=1 loops=1)"
+"  ->  Sort  (cost=1556.18..1556.27 rows=37 width=48) (actual time=2.480..2.481 rows=1 loops=1)"
+"        Sort Key: (count(bomb_damage_assessment)) DESC"
+"        Sort Method: top-N heapsort  Memory: 25kB"
+"        ->  GroupAggregate  (cost=1555.16..1556.00 rows=37 width=48) (actual time=2.465..2.472 rows=21 loops=1)"
+"              Group Key: target_country, bomb_damage_assessment"
+"              ->  Sort  (cost=1555.16..1555.26 rows=37 width=32) (actual time=2.457..2.459 rows=32 loops=1)"
+"                    Sort Key: target_country, bomb_damage_assessment"
+"                    Sort Method: quicksort  Memory: 26kB"
+"                    ->  Index Only Scan using idx_mission_performance on mission  (cost=0.42..1554.20 rows=37 width=32) (actual time=0.016..2.409 rows=32 loops=1)"
+"                          Index Cond: ((airborne_aircraft > '5'::numeric) AND (bomb_damage_assessment IS NOT NULL))"
+"                          Heap Fetches: 0"
+"Planning Time: 0.208 ms"
+"Execution Time: 2.522 ms"
+--
+--After Index:
+--
+--Total cost: 1556.18
+--Rows after filtering: 21
+--Total execution time: 2.522 ms
+--Execution plan:
+--
+--Used Sort Method: top-N heapsort and quicksort
+--Scan type: Index Only Scan using idx_mission_performance
+--Scanned 32 rows using the index
+--No parallel processing used
+--
+--Comparison:
+--
+--Execution time: Reduced from 39.660 ms to 2.522 ms (improvement of about 93.6%)
+--Significant cost reduction: From 5785.52 to 1556.18
+--Improved scan type: From Parallel Seq Scan to Index Only Scan, leading to fewer rows scanned and faster processing
+--Elimination of parallel processing, as the index made it unnecessary
 
-DROP INDEX IF EXISTS idx_bombing_aircraft_country;
-
---לפני יצירת האינדקס: השאילתה השתמשה ב-Parallel Seq Scan, עם זמן ביצוע כולל של 29.692 ms.
---אחרי יצירת האינדקס: השאילתה השתמשה ב-Bitmap Heap Scan ו-Bitmap Index Scan, וזמן הביצוע הכולל ירד ל-13.995 ms.
+DROP INDEX IF EXISTS idx_mission_performance;
