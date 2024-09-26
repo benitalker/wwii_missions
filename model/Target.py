@@ -3,15 +3,18 @@ from sqlalchemy.orm import relationship
 from config.base import Base
 
 class Target(Base):
-    __tablename__ = "Targets"
+    __tablename__ = "targets"
 
     target_id = Column(Integer, primary_key=True, autoincrement=True)
-    target_name = Column(String(255), unique=True, nullable=False)
-    city_id = Column(Integer, ForeignKey('Cities.city_id'), unique=True, nullable=False)
+    target_industry = Column(String(255), nullable=False)
+    target_priority = Column(Integer)
+    city_id = Column(Integer, ForeignKey('Cities.city_id'), nullable=False)
     target_type_id = Column(Integer, ForeignKey('TargetTypes.target_type_id'))
 
-    city = relationship("City", back_populates="targets",lazy="selectin")
-    target_type = relationship("TargetType", back_populates="targets",lazy="selectin")
+    city = relationship("City", back_populates="targets")
+    target_type = relationship("TargetType", back_populates="targets")
 
     def __repr__(self):
-        return f"<Target(target_id={self.target_id}, target_name={self.target_name}, city_id={self.city_id}, target_type_id={self.target_type_id})>"
+        return (f"<Target(target_id={self.target_id}, target_industry='{self.target_industry}', "
+                f"target_priority={self.target_priority}, city_id={self.city_id}, "
+                f"target_type_id={self.target_type_id})>")
